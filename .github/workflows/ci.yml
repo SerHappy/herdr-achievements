@@ -21,10 +21,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
-      # Keep the released module directive unchanged until this compatibility
-      # lane has passed; this only changes the ephemeral CI checkout.
-      - if: matrix.go == '1.22.x'
-        run: go mod edit -go=1.22
       - run: go vet ./...
       - run: go test ./...
       - run: go test -race ./...

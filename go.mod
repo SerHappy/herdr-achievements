@@ -1,3 +1,3 @@
 module github.com/SerHappy/herdr-achievements
 
-go 1.25
+go 1.22
