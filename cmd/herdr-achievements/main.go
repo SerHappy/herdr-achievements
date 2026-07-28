@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,8 @@ import (
 )
 
 var stderr io.Writer = os.Stderr
+
+const snapshotTimeout = 3 * time.Second
 
 func main() {
 	if len(os.Args) != 2 {
@@ -65,12 +68,12 @@ func runEvent() error {
 }
 
 func runReconcile() error {
-	statuses, err := snapshotPaneStatuses(os.Getenv("HERDR_BIN_PATH"))
-	if err != nil {
-		fmt.Fprintf(stderr, "herdr-achievements: warning: could not reconcile pane statuses: %v; clearing volatile pane statuses\n", err)
-		statuses = map[string]string{}
-	}
 	return achievements.WithLockedState(os.Getenv("HERDR_PLUGIN_STATE_DIR"), func(state *achievements.State) error {
+		statuses, err := snapshotPaneStatuses(os.Getenv("HERDR_BIN_PATH"))
+		if err != nil {
+			fmt.Fprintf(stderr, "herdr-achievements: warning: could not reconcile pane statuses: %v; clearing volatile pane statuses\n", err)
+			statuses = map[string]string{}
+		}
 		// Reconciliation intentionally replaces only ephemeral pane state.
 		state.LastStatusByPane = statuses
 		return nil
@@ -81,7 +84,9 @@ func snapshotPaneStatuses(bin string) (map[string]string, error) {
 	if bin == "" {
 		return nil, fmt.Errorf("HERDR_BIN_PATH is not set")
 	}
-	output, err := exec.Command(bin, "api", "snapshot").Output()
+	ctx, cancel := context.WithTimeout(context.Background(), snapshotTimeout)
+	defer cancel()
+	output, err := exec.CommandContext(ctx, bin, "api", "snapshot").Output()
 	if err != nil {
 		return nil, err
 	}
