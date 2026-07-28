@@ -51,6 +51,9 @@ func load(path string) (State, error) {
 	if state.Unlocked == nil {
 		state.Unlocked = map[string]string{}
 	}
+	if state.Seen == nil {
+		state.Seen = map[string]bool{}
+	}
 	if state.LastStatusByPane == nil {
 		state.LastStatusByPane = map[string]string{}
 	}

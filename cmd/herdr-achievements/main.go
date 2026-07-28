@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,6 +10,8 @@ import (
 	"time"
 
 	"github.com/SerHappy/herdr-achievements/internal/achievements"
+	"github.com/SerHappy/herdr-achievements/internal/ui"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var stderr io.Writer = os.Stderr
@@ -156,7 +157,7 @@ func runOpen() error {
 	if bin == "" {
 		return fmt.Errorf("HERDR_BIN_PATH is not set")
 	}
-	cmd := exec.Command(bin, "plugin", "pane", "open", "--plugin", "herdr-achievements", "--entrypoint", "achievements", "--placement", "popup", "--width", "72", "--height", "20", "--focus")
+	cmd := exec.Command(bin, "plugin", "pane", "open", "--plugin", "herdr-achievements", "--entrypoint", "achievements", "--placement", "popup", "--width", "88", "--height", "26", "--focus")
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return cmd.Run()
 }
@@ -166,29 +167,34 @@ func runShow() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("HERDR ACHIEVEMENTS")
-	fmt.Printf("%d / %d unlocked\n\n", len(state.Unlocked), len(achievements.Catalog))
-	for _, item := range achievements.Catalog {
-		mark := "·"
-		if _, ok := state.Unlocked[item.ID]; ok {
-			mark = "✓"
-		}
-		line := fmt.Sprintf("%s %s", mark, item.Name)
-		if item.Target > 0 {
-			peak := min(state.PeakConcurrentWorking, item.Target)
-			line += fmt.Sprintf("  %d / %d", peak, item.Target)
-		}
-		fmt.Println(line)
+	result, err := tea.NewProgram(ui.NewModel(state), tea.WithAltScreen()).Run()
+	if err != nil {
+		return err
 	}
-	fmt.Println("\nPress Enter to close")
-	_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
-	return nil
+	model, ok := result.(ui.Model)
+	if !ok {
+		return fmt.Errorf("unexpected trophy room model %T", result)
+	}
+	seen := model.SeenIDs()
+	if len(seen) == 0 {
+		return nil
+	}
+	return persistSeen(os.Getenv("HERDR_PLUGIN_STATE_DIR"), seen)
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+// persistSeen performs a fresh locked read so achievements unlocked while the
+// popup was open are retained.
+func persistSeen(dir string, seen []string) error {
+	return achievements.WithLockedState(dir, func(latest *achievements.State) error {
+		if latest.Seen == nil {
+			latest.Seen = map[string]bool{}
+		}
+		for _, id := range seen {
+			if _, stillUnlocked := latest.Unlocked[id]; stillUnlocked {
+				latest.Seen[id] = true
+			}
+		}
+		return nil
+	})
 }
 func fail(message string) { fmt.Fprintln(stderr, "herdr-achievements:", message); os.Exit(1) }
