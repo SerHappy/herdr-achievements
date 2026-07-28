@@ -22,17 +22,15 @@ reaches a new milestone.
 
 No prompts are read. No code is inspected. Nothing is sent over the network.
 
-## Achievements
+## Trophy Room
 
-| | Achievement | How to unlock |
-| --- | --- | --- |
-| 🐾 | **FIRST HOOF** | Let the first agent join your herd. |
-| 📦 | **FIRST DELIVERY** | Finish an agent turn. |
-| 🚧 | **UNSTUCK** | Help an agent return from `blocked` to `working`. |
-| 🐑🐑 | **DOUBLE TROUBLE** | Have two agents working at the same time. |
-| 🐑🐑🐑 | **FULL HERD** | Have three agents working at the same time. |
+Open the Trophy Room at any time to browse the five illustrated achievements,
+their unlock conditions, progress, and unlock timestamps. Newly unlocked
+trophies get a short pixel-art reveal the next time you open it.
 
-Open the collection at any time to see your progress.
+Use `↑`/`↓` or `j`/`k` to select a trophy, `Enter` or `Space` to replay its
+reveal, and `Esc` or `q` to close. The layout becomes a compact single card in
+narrow popups.
 
 When an achievement unlocks, Herdr shows a native notification:
 
@@ -71,6 +69,7 @@ It stores locally:
 
 * unlocked achievement IDs;
 * unlock timestamps;
+* IDs of achievements already shown in the Trophy Room;
 * current pane statuses;
 * peak concurrent agent count.
 
@@ -79,24 +78,15 @@ repository names, or agent conversations.
 
 ## Try the demo
 
-Run the popup with a temporary completed collection:
+Run the interactive popup with a temporary completed collection:
 
 ```sh
 ./scripts/demo.sh
 ```
 
 The demo does not modify your real achievement progress and requires no
-dependencies beyond Go.
-
-## Coming next
-
-The next version will turn the collection into a proper trophy room:
-
-* illustrated achievement cards;
-* animated unlock reveals;
-* keyboard navigation and detail views;
-* responsive terminal layouts;
-* shareable achievement cards.
+dependencies beyond Go. Run it in a terminal; press any key through the
+initial reveals, then `q` to close.
 
 ## Development
 

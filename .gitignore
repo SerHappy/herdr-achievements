@@ -1,5 +1,6 @@
 # Build outputs
 /bin/
+/herdr-achievements
 
 # Go coverage and test binaries
 coverage.out

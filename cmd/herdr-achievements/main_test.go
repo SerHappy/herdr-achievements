@@ -4,10 +4,49 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/SerHappy/herdr-achievements/internal/achievements"
 )
+
+func TestPersistSeenPreservesConcurrentUnlocks(t *testing.T) {
+	dir := t.TempDir()
+	if err := achievements.WithLockedState(dir, func(state *achievements.State) error {
+		state.Unlocked[achievements.FirstHoof] = "before-open"
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		if err := persistSeen(dir, []string{achievements.FirstHoof}); err != nil {
+			t.Errorf("persistSeen: %v", err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := achievements.WithLockedState(dir, func(state *achievements.State) error {
+			state.Unlocked[achievements.FirstDelivery] = "while-open"
+			return nil
+		}); err != nil {
+			t.Errorf("event transaction: %v", err)
+		}
+	}()
+	wg.Wait()
+	state, err := achievements.LoadState(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !state.Seen[achievements.FirstHoof] {
+		t.Fatal("revealed achievement was not marked seen")
+	}
+	if _, ok := state.Unlocked[achievements.FirstDelivery]; !ok {
+		t.Fatal("unlock that occurred while the room was open was lost")
+	}
+}
 
 func TestRunEventNotifiesOnlyNewAchievement(t *testing.T) {
 	dir := t.TempDir()

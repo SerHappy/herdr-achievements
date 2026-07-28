@@ -1,8 +1,8 @@
 id = "herdr-achievements"
 name = "Herdr Achievements"
-version = "0.2.1"
+version = "0.3.0"
 min_herdr_version = "0.7.5"
-description = "Tiny achievements for your AI agent herd."
+description = "A cozy terminal trophy room for your AI agent herd."
 platforms = ["macos", "linux"]
 
 [[build]]
@@ -17,8 +17,8 @@ command = ["./bin/herdr-achievements", "open"]
 id = "achievements"
 title = "Herdr Achievements"
 placement = "popup"
-width = 72
-height = 20
+width = 88
+height = 26
 command = ["./bin/herdr-achievements", "show"]
 
 [[startup]]

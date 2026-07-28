@@ -31,6 +31,7 @@ var Catalog = []Achievement{
 type State struct {
 	Version               int               `json:"version"`
 	Unlocked              map[string]string `json:"unlocked"`
+	Seen                  map[string]bool   `json:"seen"`
 	LastStatusByPane      map[string]string `json:"last_status_by_pane"`
 	PeakConcurrentWorking int               `json:"peak_concurrent_working"`
 }
@@ -43,7 +44,24 @@ type Event struct {
 }
 
 func NewState() State {
-	return State{Version: StateVersion, Unlocked: map[string]string{}, LastStatusByPane: map[string]string{}}
+	return State{
+		Version:          StateVersion,
+		Unlocked:         map[string]string{},
+		Seen:             map[string]bool{},
+		LastStatusByPane: map[string]string{},
+	}
+}
+
+// UnseenUnlocked returns unlocked achievements that have not yet been shown in
+// catalog order. Catalog order keeps the first-open reveal sequence stable.
+func UnseenUnlocked(state State) []string {
+	unseen := make([]string, 0, len(state.Unlocked))
+	for _, achievement := range Catalog {
+		if _, unlocked := state.Unlocked[achievement.ID]; unlocked && !state.Seen[achievement.ID] {
+			unseen = append(unseen, achievement.ID)
+		}
+	}
+	return unseen
 }
 
 // Reduce is deterministic: callers provide the timestamp string used for newly unlocked items.
@@ -53,6 +71,9 @@ func Reduce(state State, event Event, nowUTC string) (State, []string) {
 	}
 	if state.Unlocked == nil {
 		state.Unlocked = map[string]string{}
+	}
+	if state.Seen == nil {
+		state.Seen = map[string]bool{}
 	}
 	if state.LastStatusByPane == nil {
 		state.LastStatusByPane = map[string]string{}
