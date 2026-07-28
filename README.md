@@ -41,7 +41,7 @@ When an achievement unlocks, Herdr shows a native notification:
 
 ## Install
 
-Requires Herdr 0.7.5+ and Go 1.25+.
+Requires Herdr 0.7.5+ and Go 1.22+.
 
 ```sh
 herdr plugin install SerHappy/herdr-achievements --yes
