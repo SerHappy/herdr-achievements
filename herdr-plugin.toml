@@ -1,6 +1,6 @@
 id = "herdr-achievements"
 name = "Herdr Achievements"
-version = "0.2.0"
+version = "0.2.1"
 min_herdr_version = "0.7.5"
 description = "Tiny achievements for your AI agent herd."
 platforms = ["macos", "linux"]
@@ -21,10 +21,21 @@ width = 72
 height = 20
 command = ["./bin/herdr-achievements", "show"]
 
+[[startup]]
+command = ["./bin/herdr-achievements", "reconcile"]
+
 [[events]]
 on = "pane.agent_detected"
 command = ["./bin/herdr-achievements", "event"]
 
 [[events]]
 on = "pane.agent_status_changed"
+command = ["./bin/herdr-achievements", "event"]
+
+[[events]]
+on = "pane.closed"
+command = ["./bin/herdr-achievements", "event"]
+
+[[events]]
+on = "pane.exited"
 command = ["./bin/herdr-achievements", "event"]

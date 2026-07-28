@@ -56,3 +56,34 @@ func TestConcurrencyAcrossPanes(t *testing.T) {
 		t.Fatal("other pane status was lost")
 	}
 }
+
+func TestClosedOrExitedPaneIsRemoved(t *testing.T) {
+	for _, kind := range []string{"pane.closed", "pane.exited"} {
+		t.Run(kind, func(t *testing.T) {
+			state := NewState()
+			state.LastStatusByPane["p1"] = "working"
+			state, unlocked := Reduce(state, Event{Kind: kind, PaneID: "p1"}, "now")
+			if len(unlocked) != 0 {
+				t.Fatalf("unexpected unlocks: %v", unlocked)
+			}
+			if _, exists := state.LastStatusByPane["p1"]; exists {
+				t.Fatal("closed pane status was retained")
+			}
+		})
+	}
+}
+
+func TestReleasedAgentDetectionRemovesPaneWithoutUnlocking(t *testing.T) {
+	state := NewState()
+	state.LastStatusByPane["p1"] = "working"
+	state, unlocked := Reduce(state, Event{Kind: "pane.agent_detected", PaneID: "p1", Released: true}, "now")
+	if len(unlocked) != 0 {
+		t.Fatalf("unexpected unlocks: %v", unlocked)
+	}
+	if _, exists := state.LastStatusByPane["p1"]; exists {
+		t.Fatal("released pane status was retained")
+	}
+	if _, unlocked := state.Unlocked[FirstHoof]; unlocked {
+		t.Fatal("released detection unlocked First Hoof")
+	}
+}

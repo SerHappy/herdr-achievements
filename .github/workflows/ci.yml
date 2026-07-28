@@ -15,10 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
+        go: ["1.22.x", "1.25.x"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25.x"
+          go-version: ${{ matrix.go }}
+      # Keep the released module directive unchanged until this compatibility
+      # lane has passed; this only changes the ephemeral CI checkout.
+      - if: matrix.go == '1.22.x'
+        run: go mod edit -go=1.22
+      - run: go vet ./...
       - run: go test ./...
+      - run: go test -race ./...
       - run: go build -o "$RUNNER_TEMP/herdr-achievements" ./cmd/herdr-achievements

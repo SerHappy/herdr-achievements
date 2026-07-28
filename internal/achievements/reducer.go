@@ -36,9 +36,10 @@ type State struct {
 }
 
 type Event struct {
-	Kind   string
-	PaneID string
-	Status string
+	Kind     string
+	PaneID   string
+	Status   string
+	Released bool
 }
 
 func NewState() State {
@@ -66,7 +67,13 @@ func Reduce(state State, event Event, nowUTC string) (State, []string) {
 
 	switch event.Kind {
 	case "pane.agent_detected":
+		if event.Released {
+			delete(state.LastStatusByPane, event.PaneID)
+			break
+		}
 		unlock(FirstHoof)
+	case "pane.closed", "pane.exited":
+		delete(state.LastStatusByPane, event.PaneID)
 	case "pane.agent_status_changed":
 		previous := state.LastStatusByPane[event.PaneID]
 		state.LastStatusByPane[event.PaneID] = event.Status

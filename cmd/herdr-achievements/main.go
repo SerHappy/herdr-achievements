@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"time"
@@ -10,14 +12,18 @@ import (
 	"github.com/SerHappy/herdr-achievements/internal/achievements"
 )
 
+var stderr io.Writer = os.Stderr
+
 func main() {
 	if len(os.Args) != 2 {
-		fail("usage: herdr-achievements <event|open|show>")
+		fail("usage: herdr-achievements <event|reconcile|open|show>")
 	}
 	var err error
 	switch os.Args[1] {
 	case "event":
 		err = runEvent()
+	case "reconcile":
+		err = runReconcile()
 	case "open":
 		err = runOpen()
 	case "show":
@@ -52,10 +58,82 @@ func runEvent() error {
 			continue
 		}
 		if err := notify(achievement); err != nil {
-			return err
+			fmt.Fprintf(stderr, "herdr-achievements: warning: could not show notification for %s: %v\n", achievement.ID, err)
 		}
 	}
 	return nil
+}
+
+func runReconcile() error {
+	statuses, err := snapshotPaneStatuses(os.Getenv("HERDR_BIN_PATH"))
+	if err != nil {
+		fmt.Fprintf(stderr, "herdr-achievements: warning: could not reconcile pane statuses: %v; clearing volatile pane statuses\n", err)
+		statuses = map[string]string{}
+	}
+	return achievements.WithLockedState(os.Getenv("HERDR_PLUGIN_STATE_DIR"), func(state *achievements.State) error {
+		// Reconciliation intentionally replaces only ephemeral pane state.
+		state.LastStatusByPane = statuses
+		return nil
+	})
+}
+
+func snapshotPaneStatuses(bin string) (map[string]string, error) {
+	if bin == "" {
+		return nil, fmt.Errorf("HERDR_BIN_PATH is not set")
+	}
+	output, err := exec.Command(bin, "api", "snapshot").Output()
+	if err != nil {
+		return nil, err
+	}
+	var envelope struct {
+		Result json.RawMessage `json:"result"`
+	}
+	if err := json.Unmarshal(output, &envelope); err != nil || len(envelope.Result) == 0 || string(envelope.Result) == "null" {
+		if err != nil {
+			return nil, fmt.Errorf("invalid snapshot JSON: %w", err)
+		}
+		return nil, fmt.Errorf("invalid snapshot JSON: missing result")
+	}
+	var result struct {
+		Snapshot json.RawMessage `json:"snapshot"`
+	}
+	if err := json.Unmarshal(envelope.Result, &result); err != nil || len(result.Snapshot) == 0 || string(result.Snapshot) == "null" {
+		if err != nil {
+			return nil, fmt.Errorf("invalid snapshot JSON: %w", err)
+		}
+		return nil, fmt.Errorf("invalid snapshot JSON: missing result.snapshot")
+	}
+	var snapshot struct {
+		Agents json.RawMessage `json:"agents"`
+	}
+	if err := json.Unmarshal(result.Snapshot, &snapshot); err != nil || len(snapshot.Agents) == 0 || string(snapshot.Agents) == "null" {
+		if err != nil {
+			return nil, fmt.Errorf("invalid snapshot JSON: %w", err)
+		}
+		return nil, fmt.Errorf("invalid snapshot JSON: missing result.snapshot.agents")
+	}
+	var agents []struct {
+		PaneID      string `json:"pane_id"`
+		AgentStatus string `json:"agent_status"`
+	}
+	if err := json.Unmarshal(snapshot.Agents, &agents); err != nil {
+		return nil, fmt.Errorf("invalid snapshot JSON: %w", err)
+	}
+	statuses := make(map[string]string, len(agents))
+	for _, agent := range agents {
+		if agent.PaneID != "" && validAgentStatus(agent.AgentStatus) {
+			statuses[agent.PaneID] = agent.AgentStatus
+		}
+	}
+	return statuses, nil
+}
+
+func validAgentStatus(status string) bool {
+	switch status {
+	case "idle", "working", "blocked", "done", "unknown":
+		return true
+	}
+	return false
 }
 
 func notify(achievement achievements.Achievement) error {
@@ -108,4 +186,4 @@ func min(a, b int) int {
 	}
 	return b
 }
-func fail(message string) { fmt.Fprintln(os.Stderr, "herdr-achievements:", message); os.Exit(1) }
+func fail(message string) { fmt.Fprintln(stderr, "herdr-achievements:", message); os.Exit(1) }

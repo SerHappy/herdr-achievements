@@ -14,6 +14,9 @@ func TestDecodeInstalledSchemaFixtures(t *testing.T) {
 		{"pane.agent_status_changed", `{"type":"pane_agent_status_changed","pane_id":"w1:p1","workspace_id":"w1","agent_status":"working"}`, Event{Kind: "pane.agent_status_changed", PaneID: "w1:p1", Status: "working"}},
 		{"pane_agent_status_changed", `{"type":"pane_agent_status_changed","pane_id":"w1:p1","workspace_id":"w1","agent_status":"working"}`, Event{Kind: "pane.agent_status_changed", PaneID: "w1:p1", Status: "working"}},
 		{"pane.agent_status_changed", `{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"w1:p1","workspace_id":"w1","agent_status":"working"}}`, Event{Kind: "pane.agent_status_changed", PaneID: "w1:p1", Status: "working"}},
+		{"pane.closed", `{"type":"pane_closed","pane_id":"w1:p1","workspace_id":"w1"}`, Event{Kind: "pane.closed", PaneID: "w1:p1"}},
+		{"pane.exited", `{"type":"pane_exited","pane_id":"w1:p1","workspace_id":"w1"}`, Event{Kind: "pane.exited", PaneID: "w1:p1"}},
+		{"pane.agent_detected", `{"type":"pane_agent_detected","pane_id":"w1:p1","workspace_id":"w1","released":true,"final_status":"done"}`, Event{Kind: "pane.agent_detected", PaneID: "w1:p1", Released: true}},
 	}
 	for _, tt := range tests {
 		got, ok, err := DecodeEvent(tt.kind, tt.json)
