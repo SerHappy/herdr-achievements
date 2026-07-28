@@ -2,6 +2,10 @@
   <img src="docs/logo.png" width="160" alt="Herdr Achievements mascot">
 </p>
 
+<p align="center">
+  <img src="docs/trophy-room.png" alt="Herdr Trophy Room popup showing an unlocked achievement" width="840">
+</p>
+
 <h1 align="center">Herdr Achievements</h1>
 
 <p align="center">
