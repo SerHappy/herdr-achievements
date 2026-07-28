@@ -24,6 +24,14 @@ No prompts are read. No code is inspected. Nothing is sent over the network.
 
 ## Trophy Room
 
+| Achievement | How to unlock |
+| --- | --- |
+| **FIRST HOOF** | Let the first agent join your herd. |
+| **FIRST DELIVERY** | Finish an agent turn. |
+| **UNSTUCK** | Help an agent return from `blocked` to `working`. |
+| **DOUBLE TROUBLE** | Have two agents working at the same time. |
+| **FULL HERD** | Have three agents working at the same time. |
+
 Open the Trophy Room at any time to browse the five illustrated achievements,
 their unlock conditions, progress, and unlock timestamps. Newly unlocked
 trophies get a short pixel-art reveal the next time you open it.
