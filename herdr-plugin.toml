@@ -1,0 +1,30 @@
+id = "herdr-achievements"
+name = "Herdr Achievements"
+version = "0.1.0"
+min_herdr_version = "0.7.5"
+description = "Tiny achievements for your AI agent herd."
+platforms = ["macos", "linux"]
+
+[[build]]
+command = ["go", "build", "-o", "bin/herdr-achievements", "./cmd/herdr-achievements"]
+
+[[actions]]
+id = "open"
+title = "Open achievements"
+command = ["./bin/herdr-achievements", "open"]
+
+[[panes]]
+id = "achievements"
+title = "Herdr Achievements"
+placement = "popup"
+width = 72
+height = 20
+command = ["./bin/herdr-achievements", "show"]
+
+[[events]]
+on = "pane.agent_detected"
+command = ["./bin/herdr-achievements", "event"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["./bin/herdr-achievements", "event"]
