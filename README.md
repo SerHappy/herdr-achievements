@@ -12,6 +12,10 @@
   A playful Herdr plugin that unlocks achievements as your AI agent herd gets to work.
 </p>
 
+<p align="center">
+  <img src="docs/trophy-room.png" alt="Herdr Trophy Room popup showing an unlocked achievement" width="720">
+</p>
+
 ## Your herd deserves trophies
 
 Herdr already tells you what your agents are doing. Herdr Achievements makes those
