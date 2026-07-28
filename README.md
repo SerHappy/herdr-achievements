@@ -38,6 +38,11 @@ No prompts are read. No code is inspected. Nothing is sent over the network.
 
 Open the collection at any time to see your progress.
 
+When an achievement unlocks, Herdr shows a native notification:
+
+> 🏆 **Achievement unlocked**<br>
+> FULL HERD — Three agents working at once
+
 ## Install
 
 Requires Herdr 0.7.5+ and Go 1.25+.

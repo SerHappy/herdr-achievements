@@ -38,14 +38,34 @@ func runEvent() error {
 	if !ok {
 		return nil
 	}
+	var unlocked []string
 	err = achievements.WithLockedState(os.Getenv("HERDR_PLUGIN_STATE_DIR"), func(state *achievements.State) error {
-		*state, _ = achievements.Reduce(*state, event, time.Now().UTC().Format(time.RFC3339Nano))
+		*state, unlocked = achievements.Reduce(*state, event, time.Now().UTC().Format(time.RFC3339Nano))
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	for _, id := range unlocked {
+		achievement, ok := achievements.AchievementByID(id)
+		if !ok {
+			continue
+		}
+		if err := notify(achievement); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func notify(achievement achievements.Achievement) error {
+	bin := os.Getenv("HERDR_BIN_PATH")
+	if bin == "" {
+		return fmt.Errorf("HERDR_BIN_PATH is not set")
+	}
+	cmd := exec.Command(bin, "notification", "show", "🏆 Achievement unlocked", "--body", fmt.Sprintf("%s — %s", achievement.Name, achievement.Description), "--sound", "done")
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	return cmd.Run()
 }
 
 func runOpen() error {
