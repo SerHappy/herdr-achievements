@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/achievements-demo.gif" alt="Herdr Achievements unlocking FIRST HOOF and opening the Trophy Room" width="720">
+  <img src="docs/achievements-demo.gif" alt="Herdr Achievements unlocking FIRST HOOF and opening the Trophy Room" width="900">
 </p>
 
 ## Your herd deserves trophies
