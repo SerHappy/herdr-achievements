@@ -51,7 +51,10 @@ When an achievement unlocks, Herdr shows a native notification:
 
 ## Install
 
-Requires Herdr 0.7.5+ and Go 1.22+.
+Requires Herdr 0.7.5+. Go is only required for development from source.
+
+Installation downloads the matching prebuilt binary from GitHub Releases and
+verifies its SHA-256 checksum before installing it.
 
 ```sh
 herdr plugin install SerHappy/herdr-achievements --yes
@@ -101,6 +104,8 @@ dependencies beyond Go. Run it in a terminal; press any key through the
 initial reveals, then `q` to close.
 
 ## Development
+
+To build from source, install Go 1.22+.
 
 ```sh
 go test ./...

@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate tag and manifest version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must have the format vX.Y.Z; got: $tag" >&2
+            exit 1
+          fi
+
+          version="$(awk -F '"' '/^version[[:space:]]*=/ { print $2; exit }' herdr-plugin.toml)"
+          if [[ -z "$version" ]]; then
+            echo "Could not read version from herdr-plugin.toml" >&2
+            exit 1
+          fi
+          if [[ "${tag#v}" != "$version" ]]; then
+            echo "Tag $tag does not match manifest version $version" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build release binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          build() {
+            local os=$1 arch=$2 output=$3
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath -ldflags="-s -w" \
+              -o "dist/$output" ./cmd/herdr-achievements
+          }
+          build darwin arm64 herdr-achievements-darwin-arm64
+          build darwin amd64 herdr-achievements-darwin-amd64
+          build linux arm64 herdr-achievements-linux-arm64
+          build linux amd64 herdr-achievements-linux-amd64
+          (cd dist && sha256sum herdr-achievements-*) > dist/SHA256SUMS
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          notes=$'Prebuilt binaries are available for macOS and Linux on arm64 and amd64.\n\nThe Herdr installer selects the matching binary and verifies its SHA-256 checksum before installation.'
+          gh release create "$GITHUB_REF_NAME" --draft --title "Herdr Achievements $VERSION" --notes "$notes"
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" dist/herdr-achievements-* dist/SHA256SUMS
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false
