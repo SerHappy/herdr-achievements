@@ -28,6 +28,21 @@ func update(t *testing.T, model Model, msg tea.Msg) Model {
 	return result
 }
 
+func TestFormatUnlockedAt(t *testing.T) {
+	for _, test := range []struct {
+		timestamp string
+		want      string
+	}{
+		{timestamp: "2026-07-28T20:58:28.525335Z", want: "Jul 28 · 20:58 UTC"},
+		{timestamp: "2026-07-28T22:58:28+02:00", want: "Jul 28 · 20:58 UTC"},
+		{timestamp: "not-a-timestamp", want: "not-a-timestamp"},
+	} {
+		if got := formatUnlockedAt(test.timestamp); got != test.want {
+			t.Errorf("formatUnlockedAt(%q) = %q, want %q", test.timestamp, got, test.want)
+		}
+	}
+}
+
 func TestNavigationStaysInsideCatalog(t *testing.T) {
 	model := NewModel(settledState())
 	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
