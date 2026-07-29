@@ -60,7 +60,7 @@ jobs:
           build linux amd64 herdr-achievements-linux-amd64
           (cd dist && sha256sum herdr-achievements-*) > dist/SHA256SUMS
 
-      - name: Create draft release
+      - name: Create or reuse draft release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
@@ -68,12 +68,20 @@ jobs:
         run: |
           set -euo pipefail
           notes=$'Prebuilt binaries are available for macOS and Linux on arm64 and amd64.\n\nThe Herdr installer selects the matching binary and verifies its SHA-256 checksum before installation.'
-          gh release create "$GITHUB_REF_NAME" --draft --title "Herdr Achievements $VERSION" --notes "$notes"
+          if draft="$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft 2>/dev/null)"; then
+            if [[ "$draft" != "true" ]]; then
+              echo "Release $GITHUB_REF_NAME is already published; refusing to overwrite it" >&2
+              exit 1
+            fi
+            echo "Reusing existing draft release $GITHUB_REF_NAME"
+          else
+            gh release create "$GITHUB_REF_NAME" --draft --title "Herdr Achievements $VERSION" --notes "$notes"
+          fi
 
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" dist/herdr-achievements-* dist/SHA256SUMS
+        run: gh release upload "$GITHUB_REF_NAME" dist/herdr-achievements-* dist/SHA256SUMS --clobber
 
       - name: Publish release
         env:
