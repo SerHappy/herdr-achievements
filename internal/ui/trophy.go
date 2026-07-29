@@ -124,6 +124,14 @@ func truncateLine(line string, width int) string {
 	return b.String()
 }
 
+func formatUnlockedAt(timestamp string) string {
+	unlockedAt, err := time.Parse(time.RFC3339Nano, timestamp)
+	if err != nil {
+		return timestamp
+	}
+	return unlockedAt.UTC().Format("Jan 2 · 15:04 UTC")
+}
+
 var (
 	gold     = lipgloss.Color("#F6C453")
 	green    = lipgloss.Color("#7BAE5A")
@@ -411,7 +419,7 @@ func (m Model) renderDetail(width int) string {
 	contentWidth := cardContentWidth(width)
 	lines := []string{title.Render(item.Name), status, "", m.renderArt(item.ID, isUnlocked, contentWidth), "", renderSubtleWrapped(item.Description, contentWidth)}
 	if isUnlocked {
-		lines = append(lines, subtle.Render("Unlocked "+m.state.Unlocked[item.ID]))
+		lines = append(lines, subtle.Render("Unlocked "+formatUnlockedAt(m.state.Unlocked[item.ID])))
 	} else {
 		lines = append(lines, renderSubtleWrapped("To unlock: "+meta.condition, contentWidth), subtle.Render(m.progress(item)))
 	}
@@ -428,7 +436,7 @@ func (m Model) renderCompact(width int) string {
 	contentWidth := cardContentWidth(width)
 	lines := []string{subtle.Render(fmt.Sprintf("%d / %d  %s", m.selected+1, len(achievements.Catalog), status)), title.Render(item.Name), m.renderArt(item.ID, isUnlocked, contentWidth)}
 	if isUnlocked {
-		lines = append(lines, subtle.Render("Unlocked "+m.state.Unlocked[item.ID]))
+		lines = append(lines, subtle.Render("Unlocked "+formatUnlockedAt(m.state.Unlocked[item.ID])))
 	} else {
 		lines = append(lines, renderSubtleWrapped("To unlock: "+artwork[item.ID].condition, contentWidth), subtle.Render(m.progress(item)))
 	}
