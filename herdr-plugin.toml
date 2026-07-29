@@ -1,12 +1,12 @@
 id = "herdr-achievements"
 name = "Herdr Achievements"
-version = "0.3.0"
+version = "0.3.1"
 min_herdr_version = "0.7.5"
 description = "A cozy terminal trophy room for your AI agent herd."
 platforms = ["macos", "linux"]
 
 [[build]]
-command = ["go", "build", "-o", "bin/herdr-achievements", "./cmd/herdr-achievements"]
+command = ["bash", "scripts/install.sh"]
 
 [[actions]]
 id = "open"
