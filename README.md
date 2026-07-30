@@ -13,6 +13,14 @@
 </p>
 
 <p align="center">
+  <a href="#install">install</a> ·
+  <a href="#trophy-room">trophy room</a> ·
+  <a href="#private-by-design">privacy</a> ·
+  <a href="#try-the-demo">demo</a> ·
+  <a href="#development">development</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/SerHappy/herdr-achievements/actions/workflows/ci.yml"><img src="https://github.com/SerHappy/herdr-achievements/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status"></a>
   <a href="https://github.com/SerHappy/herdr-achievements/releases"><img src="https://img.shields.io/github/v/release/SerHappy/herdr-achievements?labelColor=252330&color=5E5A70" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/Herdr-%E2%89%A50.7.5-5E5A70?labelColor=252330" alt="Requires Herdr 0.7.5 or later">
