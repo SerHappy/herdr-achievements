@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/SerHappy/herdr-achievements/internal/achievements"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func settledState() achievements.State {
@@ -28,6 +28,12 @@ func update(t *testing.T, model Model, msg tea.Msg) Model {
 	return result
 }
 
+func keyPress(code rune, text string) tea.KeyPressMsg {
+	return tea.KeyPressMsg(tea.Key{Code: code, Text: text})
+}
+
+func viewContent(model Model) string { return model.View().Content }
+
 func TestFormatUnlockedAt(t *testing.T) {
 	for _, test := range []struct {
 		timestamp string
@@ -45,12 +51,12 @@ func TestFormatUnlockedAt(t *testing.T) {
 
 func TestNavigationStaysInsideCatalog(t *testing.T) {
 	model := NewModel(settledState())
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	model = update(t, model, keyPress('k', "k"))
 	if model.SelectedID() != achievements.FirstHoof {
 		t.Fatalf("k from first selected %q", model.SelectedID())
 	}
 	for range len(achievements.Catalog) + 2 {
-		model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		model = update(t, model, keyPress('j', "j"))
 	}
 	if model.SelectedID() != achievements.FullHerd {
 		t.Fatalf("j from last selected %q", model.SelectedID())
@@ -68,14 +74,14 @@ func TestRevealCanBeSkippedWithoutChangingReplayState(t *testing.T) {
 	if !model.IsRevealing() || model.revealReady {
 		t.Fatal("animation tick closed or completed the reveal too early")
 	}
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	model = update(t, model, keyPress('x', "x"))
 	if !model.IsRevealing() || !model.revealReady {
 		t.Fatal("key did not skip directly to the settled reveal")
 	}
 	if got := model.SeenIDs(); len(got) != 0 {
 		t.Fatalf("seen before confirming reveal = %v", got)
 	}
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
+	model = update(t, model, keyPress(tea.KeyEnter, ""))
 	if model.IsRevealing() {
 		t.Fatal("enter did not confirm the settled reveal")
 	}
@@ -84,15 +90,15 @@ func TestRevealCanBeSkippedWithoutChangingReplayState(t *testing.T) {
 	}
 
 	model = NewModel(settledState())
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
+	model = update(t, model, keyPress(tea.KeyEnter, ""))
 	if !model.IsRevealing() {
 		t.Fatal("enter did not replay selected reveal")
 	}
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	model = update(t, model, keyPress('x', "x"))
 	if !model.IsRevealing() || !model.revealReady {
 		t.Fatal("replay skip did not settle the reveal")
 	}
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
+	model = update(t, model, keyPress(tea.KeyEnter, ""))
 	if got := model.SeenIDs(); len(got) != 0 {
 		t.Fatalf("replay changed seen state: %v", got)
 	}
@@ -103,18 +109,17 @@ func TestRevealShowsProgressThroughNewTrophies(t *testing.T) {
 	state.Unlocked[achievements.FirstHoof] = "2026-01-01T00:00:00Z"
 	state.Unlocked[achievements.FirstDelivery] = "2026-01-01T00:00:00Z"
 	model := NewModel(state)
-	if !strings.Contains(model.View(), "NEW 1/2") {
-		t.Fatalf("first reveal progress missing: %q", model.View())
+	if !strings.Contains(viewContent(model), "NEW 1/2") {
+		t.Fatalf("first reveal progress missing: %q", viewContent(model))
 	}
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
-	if !model.IsRevealing() || !strings.Contains(model.View(), "NEW 2/2") {
-		t.Fatalf("second reveal progress missing: %q", model.View())
+	model = update(t, model, keyPress('x', "x"))
+	model = update(t, model, keyPress(tea.KeyEnter, ""))
+	if !model.IsRevealing() || !strings.Contains(viewContent(model), "NEW 2/2") {
+		t.Fatalf("second reveal progress missing: %q", viewContent(model))
 	}
 }
 
 func TestNewBadgeFitsInside72ColumnList(t *testing.T) {
-	t.Setenv("NO_COLOR", "1")
 	state := achievements.NewState()
 	for _, item := range achievements.Catalog {
 		state.Unlocked[item.ID] = "2026-01-01T00:00:00Z"
@@ -129,9 +134,9 @@ func TestNewBadgeFitsInside72ColumnList(t *testing.T) {
 
 func TestLockedAchievementCannotReplay(t *testing.T) {
 	model := NewModel(achievements.NewState())
-	for _, key := range []tea.KeyMsg{
-		{Type: tea.KeyEnter},
-		{Type: tea.KeyRunes, Runes: []rune{' '}},
+	for _, key := range []tea.KeyPressMsg{
+		keyPress(tea.KeyEnter, ""),
+		keyPress(tea.KeySpace, " "),
 	} {
 		model = update(t, model, key)
 		if model.IsRevealing() {
@@ -162,7 +167,6 @@ func TestWrapTextKeepsUnlockConditionsInsideDetailCard(t *testing.T) {
 }
 
 func TestLockedFullHerdTextDoesNotWrapAtTheCardEdge(t *testing.T) {
-	t.Setenv("NO_COLOR", "1")
 	model := NewModel(achievements.NewState())
 	model.selected = len(achievements.Catalog) - 1
 	// At 72 columns the right card receives 41 columns after the list and gap.
@@ -183,23 +187,25 @@ func TestLockedFullHerdTextDoesNotWrapAtTheCardEdge(t *testing.T) {
 	}
 }
 
-func TestRenderingAtPopupSizesAndWithoutColor(t *testing.T) {
-	t.Setenv("NO_COLOR", "1")
+func TestRenderingAtPopupSizes(t *testing.T) {
 	for _, size := range []tea.WindowSizeMsg{{Width: 50, Height: 14}, {Width: 72, Height: 20}, {Width: 100, Height: 30}} {
 		model := update(t, NewModel(settledState()), size)
-		assertFitsViewport(t, model.View(), size)
-		if !strings.Contains(model.View(), "HERDR TROPHY ROOM") || !strings.Contains(model.View(), "FIRST HOOF") {
-			t.Fatalf("%dx%d room is not readable: %q", size.Width, size.Height, model.View())
+		if !model.View().AltScreen {
+			t.Fatal("Trophy Room did not request the alternate screen")
 		}
-		if size.Width == 72 && size.Height == 20 && strings.HasPrefix(strings.TrimLeft(model.View(), " "), "╭") {
+		assertFitsViewport(t, viewContent(model), size)
+		if !strings.Contains(viewContent(model), "HERDR TROPHY ROOM") || !strings.Contains(viewContent(model), "FIRST HOOF") {
+			t.Fatalf("%dx%d room is not readable: %q", size.Width, size.Height, viewContent(model))
+		}
+		if size.Width == 72 && size.Height == 20 && strings.HasPrefix(strings.TrimLeft(viewContent(model), " "), "╭") {
 			t.Fatal("72x20 room still has an outer Trophy Room border")
 		}
-		lines := strings.Split(model.View(), "\n")
+		lines := strings.Split(viewContent(model), "\n")
 		if !strings.Contains(lines[len(lines)-1], "↑↓/j/k select") {
 			t.Fatalf("%dx%d footer is not pinned to the bottom: %q", size.Width, size.Height, lines[len(lines)-1])
 		}
-		model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
-		view := model.View()
+		model = update(t, model, keyPress(tea.KeyEnter, ""))
+		view := viewContent(model)
 		assertFitsViewport(t, view, size)
 		if !strings.Contains(view, "TROPHY UNLOCKED") && size.Width >= 25 && size.Height >= 13 {
 			t.Fatalf("%dx%d reveal is missing its title: %q", size.Width, size.Height, view)
@@ -207,43 +213,38 @@ func TestRenderingAtPopupSizesAndWithoutColor(t *testing.T) {
 		if strings.Contains(view, "HERDR TROPHY ROOM") {
 			t.Fatalf("%dx%d reveal appended to the room instead of taking it over", size.Width, size.Height)
 		}
-		if strings.Contains(view, "\x1b[") {
-			t.Fatalf("%dx%d view emitted color escapes with NO_COLOR", size.Width, size.Height)
-		}
 	}
 }
 
 func TestTinyRoomFitsViewport(t *testing.T) {
-	t.Setenv("NO_COLOR", "1")
 	size := tea.WindowSizeMsg{Width: 10, Height: 7}
 	model := update(t, NewModel(settledState()), size)
 
-	assertFitsViewport(t, model.View(), size)
-	if !strings.HasPrefix(model.View(), "HERDR TROP") {
-		t.Fatalf("tiny room header was not truncated as expected: %q", model.View())
+	assertFitsViewport(t, viewContent(model), size)
+	if !strings.HasPrefix(viewContent(model), "HERDR TROP") {
+		t.Fatalf("tiny room header was not truncated as expected: %q", viewContent(model))
 	}
 }
 
 func TestTinyRevealShowsTheAcceptedContinuationKeys(t *testing.T) {
-	t.Setenv("NO_COLOR", "1")
 	size := tea.WindowSizeMsg{Width: 24, Height: 12}
 	model := update(t, NewModel(settledState()), size)
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
+	model = update(t, model, keyPress(tea.KeyEnter, ""))
 
-	if view := model.View(); !strings.Contains(view, "Any key skips") {
+	if view := viewContent(model); !strings.Contains(view, "Any key skips") {
 		t.Fatalf("tiny reveal skip prompt missing: %q", view)
 	}
 
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
-	if view := model.View(); !strings.Contains(view, "Enter/Space continue") {
+	model = update(t, model, keyPress('x', "x"))
+	if view := viewContent(model); !strings.Contains(view, "Enter/Space continue") {
 		t.Fatalf("tiny reveal continuation prompt missing: %q", view)
 	}
 
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	model = update(t, model, keyPress('x', "x"))
 	if !model.IsRevealing() {
 		t.Fatal("tiny reveal accepted an unsupported continuation key")
 	}
-	model = update(t, model, tea.KeyMsg{Type: tea.KeyEnter})
+	model = update(t, model, keyPress(tea.KeyEnter, ""))
 	if model.IsRevealing() {
 		t.Fatal("tiny reveal did not accept Enter")
 	}
