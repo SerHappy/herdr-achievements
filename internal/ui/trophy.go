@@ -632,17 +632,3 @@ func (m Model) fitHeight(view string) string {
 	}
 	return strings.Join(lines[:max(1, m.height)], "\n")
 }
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

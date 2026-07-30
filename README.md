@@ -105,7 +105,7 @@ initial reveals, then `q` to close.
 
 ## Development
 
-To build from source, install Go 1.22+.
+To build from source, install Go 1.26+.
 
 ```sh
 go test ./...

@@ -120,7 +120,7 @@ func TestNewBadgeFitsInside72ColumnList(t *testing.T) {
 		state.Unlocked[item.ID] = "2026-01-01T00:00:00Z"
 	}
 	model := NewModel(state)
-	for _, line := range strings.Split(model.renderList(27), "\n") {
+	for line := range strings.SplitSeq(model.renderList(27), "\n") {
 		if strings.TrimSpace(line) == "NEW" {
 			t.Fatalf("NEW badge wrapped onto its own list row: %q", model.renderList(27))
 		}
