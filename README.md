@@ -13,6 +13,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/SerHappy/herdr-achievements/actions/workflows/ci.yml"><img src="https://github.com/SerHappy/herdr-achievements/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status"></a>
+  <a href="https://github.com/SerHappy/herdr-achievements/releases"><img src="https://img.shields.io/github/v/release/SerHappy/herdr-achievements?labelColor=252330&color=5E5A70" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/Herdr-%E2%89%A50.7.5-5E5A70?labelColor=252330" alt="Requires Herdr 0.7.5 or later">
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-5E5A70?labelColor=252330" alt="macOS and Linux">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/SerHappy/herdr-achievements?labelColor=252330&color=5E5A70" alt="MIT License"></a>
+</p>
+
+<p align="center">
   <img src="docs/achievements-demo.gif" alt="Herdr Achievements unlocking FIRST HOOF and opening the Trophy Room" width="900">
 </p>
 
