@@ -31,13 +31,13 @@ func makeArtwork() map[string]art {
 		achievements.FirstHoof: {
 			condition: "Let the first agent join your herd.",
 			lines: normalizeArtwork([]string{
-				"                 +1",
-				"     ▄██▄██▄▄▄  ▄",
-				"     ████████████",
-				"    ███████████▀█",
-				"     ████████████",
-				"      █    █ ▀█▀",
-				"      ▀    ▀",
+				"     ░░░░░░░░",
+				"  ░░░░░░░░░░░░▄██▄▀",
+				" ░░░░░░░░░░░░█████",
+				" ░░░░░░░░░░░██░███",
+				"  ░░░░░░░░░░░▀███▀",
+				"   ██     ██",
+				"   ▀▀     ▀▀",
 			}),
 		},
 		achievements.FirstDelivery: {
@@ -67,25 +67,25 @@ func makeArtwork() map[string]art {
 		achievements.DoubleTrouble: {
 			condition: "Keep two agents working at the same time.",
 			lines: normalizeArtwork([]string{
-				"",
-				" ▄█▄██▄ ▄   ▄█▄██▄ ▄",
-				"▄████████▄ ▄████████▄",
-				"▀███████▄█ ▀███████▄█",
-				" ▀█▀▀█▀██▀  ▀█▀▀█▀██▀",
-				"  █  █       █  █",
-				"",
+				"░░░░             ░░░░",
+				"░░░░░▄██▄▀ ▀▄██▄░░░░░",
+				"░░░░█████   █████░░░░",
+				"░░░██░███   ███░██░░░",
+				"░░░░▀███▀   ▀███▀░░░░",
+				"██ ██           ██ ██",
+				"▀▀ ▀▀           ▀▀ ▀▀",
 			}),
 		},
 		achievements.FullHerd: {
 			condition: "Keep three agents working at the same time.",
 			lines: normalizeArtwork([]string{
-				"×3         █▄ █ ▄█",
-				"           ██▄█▄██",
-				"            ▀███▀",
-				"     ▄██▄██▄▄▄  ▄",
-				"    ███████████▀█",
-				"      █    █ ▀█▀",
-				"      ▀    ▀",
+				"  ▄███████████████▄",
+				"▄█▀▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▀█▄",
+				"█▒▒▒▒░░░▒░░░▒░░░▒▒▒▒█",
+				"█▒▒▒▒▀█▀▒▀█▀▒▀█▀▒▒▒▒█",
+				"█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█",
+				"▀█▄▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▄█▀",
+				"  ▀███████████████▀",
 			}),
 		},
 	}
@@ -454,6 +454,7 @@ func (m Model) renderRevealTakeover() string {
 		return m.renderTinyReveal(item)
 	}
 	cardWidth := min(35, m.width)
+	revealContentWidth := max(1, cardWidth-8)
 	visibleRows := max(0, min(artHeight, m.revealStep-2))
 	borderColor := gold
 	prompt := "any key skips"
@@ -461,10 +462,10 @@ func (m Model) renderRevealTakeover() string {
 		prompt = "Enter/Space continue"
 	}
 	lines := []string{
-		m.renderConfetti(max(1, cardWidth-4)),
+		m.renderConfetti(revealContentWidth),
 		m.renderRevealTitle(),
 		selected.Render(item.Name),
-		m.renderArtRows(item.ID, true, max(1, cardWidth-4), visibleRows),
+		m.renderArtRows(item.ID, true, max(artWidth, revealContentWidth), visibleRows),
 	}
 	panel := card(cardWidth, borderColor, strings.Join(lines, "\n"))
 	status := "REPLAY"

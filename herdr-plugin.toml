@@ -1,6 +1,6 @@
 id = "herdr-achievements"
 name = "Herdr Achievements"
-version = "0.3.3"
+version = "0.3.4"
 min_herdr_version = "0.7.5"
 description = "A cozy terminal trophy room for your AI agent herd."
 platforms = ["macos", "linux"]
