@@ -9,9 +9,9 @@ import (
 	"os/exec"
 	"time"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/SerHappy/herdr-achievements/internal/achievements"
 	"github.com/SerHappy/herdr-achievements/internal/ui"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 var stderr io.Writer = os.Stderr
@@ -167,7 +167,7 @@ func runShow() error {
 	if err != nil {
 		return err
 	}
-	result, err := tea.NewProgram(ui.NewModel(state), tea.WithAltScreen()).Run()
+	result, err := tea.NewProgram(ui.NewModel(state)).Run()
 	if err != nil {
 		return err
 	}

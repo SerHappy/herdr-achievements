@@ -3,13 +3,14 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 	"time"
 	"unicode"
 
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/SerHappy/herdr-achievements/internal/achievements"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 const (
@@ -207,7 +208,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		return m, m.revealTimer()
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		key := msg.String()
 		runeKey := keyRune(msg)
 		if m.revealing != "" {
@@ -219,7 +220,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.completeRevealAnimation()
 				return m, nil
 			}
-			if key == "enter" || key == " " {
+			if key == "enter" || key == "space" {
 				m.finishReveal()
 				return m, m.startNextReveal()
 			}
@@ -232,7 +233,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.moveSelection(-1)
 		case "down":
 			m.moveSelection(1)
-		case "enter", " ":
+		case "enter", "space":
 			if m.startReplay() {
 				return m, m.revealTimer()
 			}
@@ -247,11 +248,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) View() string {
+func (m Model) View() tea.View {
+	var content string
 	if m.revealing != "" {
-		return m.fitHeight(m.renderRevealTakeover())
+		content = m.fitHeight(m.renderRevealTakeover())
+	} else {
+		content = m.fitHeight(m.renderRoom())
 	}
-	return m.fitHeight(m.renderRoom())
+	view := tea.NewView(content)
+	view.AltScreen = true
+	return view
 }
 
 func (m Model) SelectedID() string {
@@ -327,9 +333,10 @@ func (m *Model) completeRevealAnimation() {
 	m.revealReady = true
 }
 
-func keyRune(msg tea.KeyMsg) rune {
-	if msg.Type == tea.KeyRunes && len(msg.Runes) == 1 {
-		return unicode.ToLower(msg.Runes[0])
+func keyRune(msg tea.KeyPressMsg) rune {
+	runes := []rune(msg.Key().Text)
+	if len(runes) == 1 {
+		return unicode.ToLower(runes[0])
 	}
 	return 0
 }
@@ -349,7 +356,7 @@ func (m Model) renderRoom() string {
 		body = lipgloss.JoinHorizontal(lipgloss.Top, m.renderList(leftWidth), "  ", m.renderDetail(rightWidth))
 	}
 	room := m.pinFooter(header+"\n\n"+body, m.renderHelp())
-	return lipgloss.NewStyle().Width(innerWidth).Padding(0, 1).Render(room)
+	return lipgloss.NewStyle().Width(m.width).Padding(0, 1).Render(room)
 }
 
 func (m Model) renderTinyRoom() string {
@@ -514,11 +521,11 @@ func (m Model) renderArtRows(id string, isUnlocked bool, width, visibleRows int)
 	return lipgloss.NewStyle().Width(width).Align(lipgloss.Center).Render(canvas)
 }
 
-func card(width int, color lipgloss.TerminalColor, content string) string {
+func card(width int, borderColor color.Color, content string) string {
 	if width < 5 {
 		return content
 	}
-	return lipgloss.NewStyle().Width(max(1, width-4)).Border(border).BorderForeground(color).Padding(0, 1).Render(content)
+	return lipgloss.NewStyle().Width(width).Border(border).BorderForeground(borderColor).Padding(0, 1).Render(content)
 }
 
 // Leave one column empty inside a card. Some terminals eagerly wrap a styled
@@ -598,7 +605,7 @@ func (m Model) progress(item achievements.Achievement) string {
 	return fmt.Sprintf("Progress: %d / %d agents working", progress, item.Target)
 }
 
-func (m Model) detailBorder(isUnlocked bool) lipgloss.TerminalColor {
+func (m Model) detailBorder(isUnlocked bool) color.Color {
 	if isUnlocked {
 		return gold
 	}
