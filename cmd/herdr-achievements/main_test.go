@@ -59,7 +59,7 @@ func TestRunEventNotifiesOnlyNewAchievement(t *testing.T) {
 	t.Setenv("HERDR_BIN_PATH", binPath)
 	t.Setenv("HERDR_PLUGIN_STATE_DIR", filepath.Join(dir, "state"))
 	t.Setenv("HERDR_PLUGIN_EVENT", "pane.agent_detected")
-	t.Setenv("HERDR_PLUGIN_EVENT_JSON", `{"type":"pane_agent_detected","pane_id":"w1:p1","workspace_id":"w1"}`)
+	t.Setenv("HERDR_PLUGIN_EVENT_JSON", `{"event":"pane_agent_detected","data":{"type":"pane_agent_detected","pane_id":"w1:p1","workspace_id":"w1"}}`)
 	t.Setenv("NOTIFICATION_LOG", logPath)
 
 	if err := runEvent(); err != nil {
@@ -96,7 +96,7 @@ func TestRunEventKeepsSavedAchievementWhenNotificationFails(t *testing.T) {
 	stateDir := filepath.Join(dir, "state")
 	t.Setenv("HERDR_PLUGIN_STATE_DIR", stateDir)
 	t.Setenv("HERDR_PLUGIN_EVENT", "pane.agent_detected")
-	t.Setenv("HERDR_PLUGIN_EVENT_JSON", `{"type":"pane_agent_detected","pane_id":"w1:p1","workspace_id":"w1"}`)
+	t.Setenv("HERDR_PLUGIN_EVENT_JSON", `{"event":"pane_agent_detected","data":{"type":"pane_agent_detected","pane_id":"w1:p1","workspace_id":"w1"}}`)
 
 	var warnings bytes.Buffer
 	previousStderr := stderr
@@ -140,7 +140,7 @@ func TestRunEventReconciliationDropsStalePaneStatuses(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("HERDR_PLUGIN_EVENT", "pane.agent_status_changed")
-	t.Setenv("HERDR_PLUGIN_EVENT_JSON", `{"type":"pane_agent_status_changed","pane_id":"new:p1","workspace_id":"w1","agent_status":"working"}`)
+	t.Setenv("HERDR_PLUGIN_EVENT_JSON", `{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"new:p1","workspace_id":"w1","agent_status":"working"}}`)
 
 	if err := runEvent(); err != nil {
 		t.Fatal(err)

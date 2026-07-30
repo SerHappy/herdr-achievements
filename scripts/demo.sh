@@ -33,12 +33,12 @@ emit_event() {
 	"$demo_dir/herdr-achievements" event
 }
 
-emit_event pane.agent_detected '{"type":"pane_agent_detected","pane_id":"demo:p1","workspace_id":"demo"}'
-emit_event pane.agent_status_changed '{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"working"}'
-emit_event pane.agent_status_changed '{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"done"}'
-emit_event pane.agent_status_changed '{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"blocked"}'
-emit_event pane.agent_status_changed '{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"working"}'
-emit_event pane.agent_status_changed '{"type":"pane_agent_status_changed","pane_id":"demo:p2","workspace_id":"demo","agent_status":"working"}'
-emit_event pane.agent_status_changed '{"type":"pane_agent_status_changed","pane_id":"demo:p3","workspace_id":"demo","agent_status":"working"}'
+emit_event pane.agent_detected '{"event":"pane_agent_detected","data":{"type":"pane_agent_detected","pane_id":"demo:p1","workspace_id":"demo"}}'
+emit_event pane.agent_status_changed '{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"working"}}'
+emit_event pane.agent_status_changed '{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"done"}}'
+emit_event pane.agent_status_changed '{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"blocked"}}'
+emit_event pane.agent_status_changed '{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"demo:p1","workspace_id":"demo","agent_status":"working"}}'
+emit_event pane.agent_status_changed '{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"demo:p2","workspace_id":"demo","agent_status":"working"}}'
+emit_event pane.agent_status_changed '{"event":"pane_agent_status_changed","data":{"type":"pane_agent_status_changed","pane_id":"demo:p3","workspace_id":"demo","agent_status":"working"}}'
 
 HERDR_PLUGIN_STATE_DIR="$demo_dir/state" "$demo_dir/herdr-achievements" show
