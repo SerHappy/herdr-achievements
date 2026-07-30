@@ -1,9 +1,7 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,28 +12,27 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Validate tag and manifest version
+      - name: Require main branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Release workflow must run from main; got $GITHUB_REF" >&2
+            exit 1
+          fi
+
+      - name: Validate manifest version
         id: version
         shell: bash
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
-          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Release tag must have the format vX.Y.Z; got: $tag" >&2
-            exit 1
-          fi
-
           version="$(awk -F '"' '/^version[[:space:]]*=/ { print $2; exit }' herdr-plugin.toml)"
-          if [[ -z "$version" ]]; then
-            echo "Could not read version from herdr-plugin.toml" >&2
-            exit 1
-          fi
-          if [[ "${tag#v}" != "$version" ]]; then
-            echo "Tag $tag does not match manifest version $version" >&2
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Manifest version must have the format X.Y.Z; got: $version" >&2
             exit 1
           fi
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-go@v6
         with:
@@ -64,26 +61,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
           notes=$'Prebuilt binaries are available for macOS and Linux on arm64 and amd64.\n\nThe Herdr installer selects the matching binary and verifies its SHA-256 checksum before installation.'
-          if draft="$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft 2>/dev/null)"; then
+          if draft="$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null)"; then
             if [[ "$draft" != "true" ]]; then
-              echo "Release $GITHUB_REF_NAME is already published; refusing to overwrite it" >&2
+              echo "Release $TAG is already published; refusing to overwrite it" >&2
               exit 1
             fi
-            echo "Reusing existing draft release $GITHUB_REF_NAME"
+            echo "Reusing existing draft release $TAG"
           else
-            gh release create "$GITHUB_REF_NAME" --draft --title "Herdr Achievements $VERSION" --notes "$notes"
+            gh release create "$TAG" --target "$GITHUB_SHA" --draft --title "Herdr Achievements $VERSION" --notes "$notes"
           fi
 
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" dist/herdr-achievements-* dist/SHA256SUMS --clobber
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release upload "$TAG" dist/herdr-achievements-* dist/SHA256SUMS --clobber
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit "$GITHUB_REF_NAME" --draft=false
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false
